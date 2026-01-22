@@ -52,12 +52,12 @@ const userSchema = new Schema(
     }
 )
 
-userSchema.pre("save", async function (next) {
-    if(!this.isModified("password")) return next();
+//this couldn't work the previous way as our postman was no accepting next function.
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) return; // Just return, don't call next
 
-    this.password = await bcrypt.hash(this.password, 10)
-    next()
-})
+    this.password = await bcrypt.hash(this.password, 10);
+});
 
 userSchema.methods.isPasswordCorrect = async function(password){
     return await bcrypt.compare(password, this.password)
