@@ -26,6 +26,26 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
+    const deleteFromCloudinary = async (cloudinaryFilePath) => {
+        try {
+            if(!cloudinaryFilePath) return null
+        
+            //the code below id what we write when we extract the xact information about our image
+            const publicId = cloudinaryFilePath.split("/").pop().split(".")[0];
+            
+            const response = await cloudinary.uploader.destroy(publicId, {
+                    resource_type: "auto" 
+                });
+        
+                return response;
+        } catch (error) {
+            console.log("Error while deleting file from cloudinary",error)
+            return null
+        }
+    }
 
 
-export {uploadOnCloudinary}
+export {
+    uploadOnCloudinary,
+    deleteFromCloudinary
+}
