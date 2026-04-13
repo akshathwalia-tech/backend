@@ -2,26 +2,29 @@ import {v2 as cloudinary} from "cloudinary"
 import fs from "fs"
 
 
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET 
-});
 
 const uploadOnCloudinary = async (localFilePath) => {
     try {
-        if (!localFilePath) return null
+        // Enforce lazy evaluation of environment variables so ES Module Hoisting doesn't strip them!
+        cloudinary.config({ 
+          cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+          api_key: process.env.CLOUDINARY_API_KEY, 
+          api_secret: process.env.CLOUDINARY_API_SECRET 
+        });
+
+        if (!localFilePath) return null;
         //upload the file on cloudinary
         const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
-        })
-        // file has been uploaded successfull
-        //console.log("file is uploaded on cloudinary ", response.url);
-        fs.unlinkSync(localFilePath)
+            resource_type: "auto",
+            timeout: 120000,  // 120 seconds (default 60s causes TimeoutError)
+        });
+        
+        fs.unlinkSync(localFilePath);
         return response;
 
     } catch (error) {
-        fs.unlinkSync(localFilePath) // remove the locally saved temporary file as the upload operation got failed
+        console.error("Cloudinary Upload Error Details:", error);
+        if (localFilePath) fs.unlinkSync(localFilePath);
         return null;
     }
 }
@@ -29,6 +32,13 @@ const uploadOnCloudinary = async (localFilePath) => {
     const deleteFromCloudinary = async (cloudinaryFilePath) => {
         try {
             if(!cloudinaryFilePath) return null
+
+            // Ensure Cloudinary is configured (lazy init, same as uploadOnCloudinary)
+            cloudinary.config({ 
+              cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+              api_key: process.env.CLOUDINARY_API_KEY, 
+              api_secret: process.env.CLOUDINARY_API_SECRET 
+            });
         
             //the code below id what we write when we extract the xact information about our image
             const publicId = cloudinaryFilePath.split("/").pop().split(".")[0];

@@ -36,5 +36,16 @@ app.use("/api/v1/tweets", tweetRouter)
 app.use("/api/v1/healthcheck", healthcheckRouter)
 app.use("/api/v1/dashboard", dashboardRouter)
 
+// Global Error Handling Middleware
+app.use((err, req, res, next) => {
+    const statusCode = err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    
+    return res.status(statusCode).json({
+        success: false,
+        message: message,
+        errors: err.errors || []
+    });
+});
 
 export{ app }

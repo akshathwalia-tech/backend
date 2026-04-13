@@ -43,7 +43,7 @@ const registerUser = asyncHandler( async (req, res) => {
 }
     //console.log (req.files);
 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
+    const avatarLocalPath = req.files?.avatar?.[0]?.path;
     //const coverImageLocalPath = req.files?.coverImage[0]?.path
 
     let coverImageLocalPath;
@@ -59,7 +59,7 @@ const registerUser = asyncHandler( async (req, res) => {
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
      if (!avatar) {
-        throw new ApiError(400, "Avatar file is required")
+        throw new ApiError(500, "Error uploading Avatar to Cloudinary. Check your API Keys in .env!")
     }
 
     const user = await User.create({
@@ -80,7 +80,7 @@ const registerUser = asyncHandler( async (req, res) => {
     }
 
     return res.status(201).json(
-        new ApiResponse(200, createdUser, "User registered Successfully")
+        new ApiResponse(201, createdUser, "User registered Successfully")
     )
 
 })
@@ -199,16 +199,16 @@ const refreshAccessToken = asyncHandler(async(req,res) => {
             secure: true
         }
     
-        const {accessToken, newRefreshToken} = await generateAccessAndRefereshTokens(user._id)
+        const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
     
         return res
         .status(200)
         .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", newRefreshToken, options)
+        .cookie("refreshToken", refreshToken, options)
         .json(
             new ApiResponse(
                 200, 
-                {accessToken, refreshToken: newRefreshToken},
+                {accessToken, refreshToken},
                 "Access token refreshed"
             )
         )
@@ -281,7 +281,7 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
     
     const avatar = await uploadOnCloudinary(avatarLocalPath)
 
-    if (!avatar.url) {
+    if (!avatar || !avatar.url) {
         throw new ApiError(400, "Error while uploading on avatar")
         
     }
@@ -318,8 +318,8 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
 
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
-    if (!coverImage.url) {
-        throw new ApiError(400, "Error while uploading on avatar")
+    if (!coverImage || !coverImage.url) {
+        throw new ApiError(400, "Error while uploading cover image")
         
     }
 

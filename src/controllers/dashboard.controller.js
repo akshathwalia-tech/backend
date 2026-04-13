@@ -7,11 +7,12 @@ import {asyncHandler} from "../utils/asynchandler.js"
 
 const getChannelStats = asyncHandler(async (req, res) => {
     const userId = req.user._id;
+    const userIdObj = new mongoose.Types.ObjectId(userId.toString());
 
     const totalSubscribersPromise = Subscription.countDocuments({ channel: userId });
     
     const videoStatsPromise = Video.aggregate([
-        { $match: { owner: new mongoose.Types.ObjectId(userId) } },
+        { $match: { owner: userIdObj } },
         { 
             $group: { 
                 _id: null, 
@@ -30,10 +31,10 @@ const getChannelStats = asyncHandler(async (req, res) => {
                 as: "videoDetails"
             }
         },
-        { $unwind: "$videoDetails" },
+        { $unwind: { path: "$videoDetails", preserveNullAndEmptyArrays: false } },
         {
             $match: {
-                "videoDetails.owner": new mongoose.Types.ObjectId(userId)
+                "videoDetails.owner": userIdObj
             }
         },
         {
